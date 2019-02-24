@@ -1,0 +1,270 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>HTML5 Canvas</title>
+</head>
+<body>
+
+<div class='toolbar'>
+  <label for="linecap">Line Cap
+    <select class='linecap'>
+      <option value="butt">Butt</option>
+      <option value="round">Round</option>
+      <option value="square">Square</option>
+    </select>
+  </label>
+  <div class="slidecontainer">
+    <input type="range" min="1" max="200" value="50" class="slider" id="myRange">
+    <p>Value: <span id="demo"></span></p>
+  </div>
+  <!-- <div>
+    <button class="toggle"> Size Fade On</button>
+  </div> -->
+    <!-- Rounded switch -->
+  <div>
+    <label class="switch">
+      <input type="checkbox" value="on" id="onoff" checked>
+      <span class="toggle round"></span>
+    </label>
+      <p>Line size fade</p>
+  </div>
+  <label for="composite">Global Composite Operation:
+    <select class='composite'>
+      <option value="source-over">none</option>
+      <option value="multiply">multiply</option>
+      <option value="destination-over">Destination-over</option>
+      <option value="lighter">Lighter</option>
+      <option value="xor">xor</option>
+      <option value="screen">Screen</option>
+      <option value="overlay">Overlay</option>
+      <option value="color-burn">Color-burn</option>
+      <option value="hue">Hue</option>
+      <option value="saturation">Saturation</option>
+      <option value="luminosity">Luminosity</option>
+      <option value="color">Color</option>
+      <option value="exclusion">Exclusion</option>
+
+
+    </select>
+  </label>
+
+</div>
+
+
+<canvas id="draw" width="800" height="800"></canvas>
+
+
+<script>
+
+const slider = document.getElementById("myRange");
+const output = document.getElementById("demo");
+const toggle = document.querySelector('.toggle');
+const canvas = document.querySelector('#draw');
+const ctx = canvas.getContext('2d');
+const linecap = document.querySelector('.linecap');
+const globalCompOp = document.querySelector('.composite');
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+ctx.strokeStyle = '#BADA55';
+ctx.lineJoin = 'round';
+// ctx.lineCap = `'${linecap.value}'`;
+ctx.lineWidth = slider.value;
+ctx.globalCompositeOperation = `${globalCompOp.value}`;
+console.log(`'${globalCompOp.value}'`)
+
+
+
+let isDrawing = false;
+let lastX = 0;
+let lastY = 0;
+let hue = 0;
+let direction = true;
+let lineWidthfade = true;
+
+function draw(e){
+  if(!isDrawing) return; /* stops the fn from running when
+    they are not mouseddown */
+  console.log(e);
+  ctx.strokeStyle = `hsl(${hue}, 100%, 50%)`;
+  ctx.beginPath();
+  // start from
+  ctx.moveTo(lastX,lastY);
+  // go to
+  ctx.lineTo(e.offsetX,e.offsetY);
+  ctx.stroke();
+  [lastX, lastY] = [e.offsetX, e.offsetY]; /* destructing an array E6, assigns
+  lastX to e.offsetX and lastY to e.offsetY in one line. */
+  hue++;
+  if(hue >= 360){
+      hue = 0;
+  }
+
+
+
+if(lineWidthfade){
+  if(ctx.lineWidth >= 200 || ctx.lineWidth <= 1){
+    direction = !direction;
+  }
+  if(direction){
+    ctx.lineWidth++;
+  } else{
+    ctx.lineWidth--;
+  }
+}
+
+}
+canvas.addEventListener('mousedown', (e) =>{
+  isDrawing = true;
+  [lastX, lastY] = [e.offsetX, e.offsetY];
+});
+
+canvas.addEventListener('mousemove', draw);
+canvas.addEventListener('mouseup', () => isDrawing = false);
+canvas.addEventListener('mouseout', () => isDrawing = false);
+linecap.addEventListener('change', () =>{
+  ctx.lineCap = `${linecap.value}`;
+});
+globalCompOp.addEventListener('change',() =>{
+  ctx.globalCompositeOperation = `${globalCompOp.value}`;
+
+});
+
+output.innerHTML = slider.value;
+
+slider.oninput = function() {
+  output.innerHTML = this.value;
+  ctx.lineWidth = this.value;
+}
+
+function onoff(){
+  let switchBtn = document.querySelector('#onoff');
+  switchBtn.addEventListener('change',(e) => {
+    console.log(switchBtn.value);
+    if(switchBtn.value === 'on'){
+      switchBtn.value = 'off';
+      lineWidthfade = false;
+    }
+    else{
+      switchBtn.value = 'on';
+      lineWidthfade = true;
+    }
+
+  }
+  );
+}
+
+onoff();
+
+
+</script>
+
+<style>
+  html, body {
+    margin: 0;
+  }
+
+  .toolbar{
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+  }
+  .slidecontainer {
+  width: 150px; /* Width of the outside container */
+  padding: 0 10px;
+ }
+
+/* The slider itself */
+.slider {
+  -webkit-appearance: none;  /* Override default CSS styles */
+  appearance: none;
+  width: 100%; /* Full-width */
+  height: 15px; /* Specified height */
+  background: #d3d3d3; /* Grey background */
+  outline: none; /* Remove outline */
+  opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
+  -webkit-transition: .2s; /* 0.2 seconds transition on hover */
+  transition: opacity .2s;
+ }
+
+/* Mouse-over effects */
+.slider:hover {
+  opacity: 1; /* Fully shown on mouse-over */
+ }
+
+canvas{
+  border: 4px solid;
+   }
+
+
+   .switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.toggle:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .toggle {
+  background-color: #2196F3;
+}
+
+input:focus + .toggle {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .toggle:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.toggle.round {
+  border-radius: 34px;
+}
+
+.toggle.round:before {
+  border-radius: 50%;
+}
+
+.composite{
+  display: block;
+  text-align: center;
+
+}
+</style>
+
+</body>
+</html>
